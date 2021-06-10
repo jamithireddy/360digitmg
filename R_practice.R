@@ -158,3 +158,162 @@ summary(data1)
 #### Handling Duplicates####
 
 # Duplicate entries are handled using duplicated function, which stores the duplicated values
+
+# Clearing the existing variables
+rm(list=ls())
+
+# Loading the data file mtcars_dup
+
+dup_data<-read.csv(file.choose())
+dup<-duplicated(dup_data)# Returns if a value is a duplicate or not
+dup
+data_new<-dup_data[!duplicated(dup_data),]  # Assigning Non duplicated rows to a new dataframe
+data_new
+
+####Zero Variance Data ####
+
+# Use 'apply' , 'var' functions to check the variance of the numerical data
+
+apply(data,2,var)
+
+# Checking which columns have Near Zero Variance
+
+which(apply(data,2,var)==0)
+
+# Any columns that come with Near Zero Variance are not considered for analysis as they dont bring in any value
+
+
+#### Missing Value Imputation ####
+
+rm(list=ls()) # Discarding the older variables.
+
+# Loading the dataset  "Modified_ethnic.CSV"
+data.mis<-read.csv((file.choose()))
+attach(data.mis)
+summary(data.mis)
+# There are NAs present in Salaries and age
+
+# Omitting the NA value records.
+data_omit<-na.omit(data.mis)
+
+# 'na.omit' discards the entire row if any of the numeric data columns has NULL value in it
+dim(data_omit) # getting dimensions of the dataset
+sum(is.na(data_omit))
+
+
+
+# Imputing the data with Mean / Median / Mode
+
+# Imputing the missing values in salaries using means
+
+sum(is.na(data.mis$Salaries))# 32 missing values in the Salaries
+data.mis$Salaries[is.na(data.mis$Salaries)]<-mean(data.mis$Salaries,na.rm=TRUE)
+
+sum(is.na(data.mis$Salaries))
+
+# For data missing in numerical Columns we can go with Mean / Median imputation.
+# However for  missing categorical data we have to go with mode imputation.
+summary(data.mis$Race)
+#converting the Chr data to factor
+data.mis$Race<-as.factor(data.mis$Race)
+summary(data.mis$Race)# 25 NAs exist
+
+# writing custom function to calculate the Mode
+
+Mode<-function(x){
+  a=table(x)# Gets the value counts.
+  names(a[which.max(a)])
+}
+
+
+#calculating Mode on the Non.Null values in the columns Position and Department and then imputing the values 
+data.mis$Position[is.na(data.mis$Position)]<-Mode(data.mis$Position[!is.na(data.mis$Position)])
+data.mis$Department[is.na(data.mis$Department)]<-Mode(data.mis$Department[!is.na(data.mis$Department)])
+
+data_cat <-data.mis[,-c(1,8,9)]# Secelecting all rows and all columns except 1st,8th & 9th Columns.
+sum(is.na(data_cat))
+
+# imputing all categorical Columns with Mode
+data_tran<-as.data.frame((apply(data_cat,2,Mode))) # 2 in apply is mentioning apply the function mode on Columns.
+data_tran
+
+#### Dummy Variable Creation ####
+rm(list = ls())
+# Load ethic diversity.csv data 
+data<-read.csv(file.choose())
+
+# Check for Structure and Summary of the dataframe
+str(data)
+summary(data)
+attach(data)
+
+# Calling the library 'fastDummies'
+
+library(fastDummies)
+#### One-Hot-Encoding ####
+
+data_dummy<-dummy_cols(data,select_columns=c("Position","State","Sex","MaritalDesc","CitizenDesc","EmploymentStatus","Department","Race"),
+                       remove_first_dummy = TRUE,remove_most_frequent_dummy = FALSE,remove_selected_columns = TRUE)
+# We Chose to remove first dummy as we can figure out one column with all other columns data included
+
+
+#### Label Encoding ####
+library(CatEncoders)
+View(data)
+
+
+lb_new<-LabelEncoder.fit(data$Position)# create labels for all unique values
+lb_new
+position_new<-transform(lb_new,data$Position)# apply labels to the data$Position and save to a variable
+position_new
+
+# Update the position_new in the original dataset
+
+new_data<-cbind(data,position_new)
+# The column position_new gets added to the end of the data
+
+#### Normalization & Standardization of the Data #####
+# Before applying algorithms to the data sets, we have to ensure that high magnitude data will not effect other variables
+# Hence we make all the numerical variables to the scale 0 to 1 only
+# Normalization #
+norm<-function(x){
+  return((x-min(x))/(max(x)-min(x)))
+}
+df<-data_dummy[,-c(1,2,3)] # dropping all Non-Numerical data
+
+df_norm<-as.data.frame(lapply(df,norm))
+summary(df_norm)
+
+# Standardization # 
+# we have built-in function named scale readily available for standardization
+
+#Load the dataset mtcars
+df_mt<-read.csv(file.choose())
+
+df_scale<-as.data.frame(scale(df_mt))
+
+#### Outlier Treatment #####
+rm(list=ls())
+
+#Load ethnic diversity Dataset
+data<-read.csv(file.choose())
+
+attach(data)
+
+# Check for outliers in the data
+
+boxplot(Salaries)# Outliers exist
+boxplot(age)  # OUtliers doesnt exist
+
+
+
+
+
+
+
+
+
+
+
+
+
